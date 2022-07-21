@@ -155,4 +155,32 @@ export const updatePatient = async (req, res) => {
   });
 };
 
+export const deletePatient = async (req, res) => {
+  logger.info(`${req.method} ${req.originalUrl}, deleting patient`);
+  database.query(QUERY.DELETE_PATIENT, [req.params.id], (error, results) => {
+    if (results.affectedRows > 0) {
+      res
+        .status(HttpStatus.OK.code)
+        .send(
+          new Response(
+            HttpStatus.OK.code,
+            HttpStatus.OK.status,
+            `Patient  deleted`,
+            results[0]
+          )
+        );
+    } else {
+      res
+        .status(HttpStatus.NOT_FOUND.code)
+        .send(
+          new Response(
+            HttpStatus.NOT_FOUND.code,
+            HttpStatus.NOT_FOUND.status,
+            `Patient by id ${req.params.id} was not found`
+          )
+        );
+    }
+  });
+};
+
 export default HttpStatus;
