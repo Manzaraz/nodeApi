@@ -17,11 +17,11 @@ export const getPatients = async (req, res) => {
   database.query(QUERY.SELECT_PATIENTS, (err, results) => {
     if (!results) {
       res
-        .status(HttpStatus.NO_CONTENT.code)
+        .status(HttpStatus.OK.code)
         .send(
           new Response(
-            HttpStatus.NO_CONTENT.code,
-            HttpStatus.NO_CONTENT.status,
+            HttpStatus.OK.code,
+            HttpStatus.OK.status,
             "No patients found"
           )
         );
@@ -34,6 +34,78 @@ export const getPatients = async (req, res) => {
             HttpStatus.OK.status,
             "Patients retrieved",
             { patients: results }
+          )
+        );
+    }
+  });
+};
+
+export const createPatient = async (req, res) => {
+  logger.info(`${req.method} ${req.originalUrl}, Create patient`);
+  database.query(
+    QUERY.CREATE_PATIENT,
+    Object.values(req.body),
+    (err, results) => {
+      if (!results) {
+        logger.error(err.message);
+        res
+          .status(HttpStatus.INTERNAL_SERVER_ERROR.code)
+          .send(
+            new Response(
+              HttpStatus.INTERNAL_SERVER_ERROR.code,
+              HttpStatus.INTERNAL_SERVER_ERROR.status,
+              "Error ocurred"
+            )
+          );
+      } else {
+        const patient = {
+          id: results.insertId,
+          ...req.body,
+          created_at: new Date(),
+        };
+        res
+          .status(HttpStatus.CREATED.code)
+          .send(
+            new Response(
+              HttpStatus.CREATED.code,
+              HttpStatus.CREATED.status,
+              "Patient created",
+              { patient }
+            )
+          );
+      }
+    }
+  );
+};
+
+export const getPatient = async (req, res) => {
+  logger.info(`${req.method} ${req.originalUrl}, Fetching patient`);
+  database.query(QUERY.SELECT_PATIENT, [req.params.id], (err, results) => {
+    if (!results[0]) {
+      logger.error(err.message);
+      res
+        .status(HttpStatus.NOT_FOUND.code)
+        .send(
+          new Response(
+            HttpStatus.NOT_FOUND.code,
+            HttpStatus.NOT_FOUND.status,
+            `Patient by id ${req.params.id} was not found`
+          )
+        );
+    } else {
+      const patient = {
+        id: results.insertId,
+        ...req.body,
+        created_at: new Date(),
+      };
+      res
+        .status(HttpStatus.OK.code)
+        .send(
+          new Response(
+            HttpStatus.OK.code,
+            HttpStatus.OK.status,
+            `Patient  retrieved`,
+            results[0]
           )
         );
     }
